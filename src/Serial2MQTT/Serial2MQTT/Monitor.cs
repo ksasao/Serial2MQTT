@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using uPLibrary.Networking.M2Mqtt;
 using Codeplex.Data;
+using System.Net;
 
 namespace Serial2MQTT
 {
@@ -16,6 +17,7 @@ namespace Serial2MQTT
         SerialPort serialPort;
         public string PortName { get; private set; }
         public string Host { get; private set; }
+        public int Port { get; private set; } = 1883; // MQTT default port
 
         MqttClient client = null;
 
@@ -24,14 +26,24 @@ namespace Serial2MQTT
         public Monitor(string portName, string host)
         {
             PortName = portName;
-            Host = host;
+            int pos = host.LastIndexOf(":");
+            if (pos > 0)
+            {
+                Host = host.Substring(0, pos);
+                Port = Convert.ToInt32(host.Substring(pos + 1));
+            }
+            else
+            {
+                Host = host;
+            }
+            Console.WriteLine($"Connecting to {Host}:{Port}");
 
             Initialize();
         }
 
         private void Initialize()
         {
-            client = new MqttClient(Host);
+            client = new MqttClient(Host,Port,false,null,null,MqttSslProtocols.None);
             client.MqttMsgPublishReceived += (sender, e) =>
             {
                 Console.WriteLine(Encoding.UTF8.GetString(e.Message));
@@ -53,7 +65,7 @@ namespace Serial2MQTT
             serialPort.Open();
             serialPort.ReadExisting();
             client.Connect(clientId);
-            Console.WriteLine($"Connected to {Host}");
+            Console.WriteLine($"Connected.");
         }
 
         void Publish(string path, object json)

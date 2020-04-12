@@ -1,0 +1,19 @@
+﻿void Setup(SerialPort serial)
+{
+    // Sample
+    serial.BaudRate = 9600;
+    serial.StopBits = StopBits.One;
+    serial.NewLine = "\n";
+    serial.DtrEnable = true;
+    serial.Parity = Parity.None;
+}
+void OnSerialReceived(string data)
+{
+    // Sample
+    Console.WriteLine($"{PortName} => {data}");
+    var json = new
+    {
+        Data = "World"
+    };
+    Publish("Hello", json);
+}

@@ -98,3 +98,9 @@ function setChart(id, topic, axisName, yMin, yMax){
     yMins[topic] = yMin;
     yMaxs[topic] = yMax;
 }
+
+function subscribeTopics(client){
+    for (var key in topics) {
+        client.subscribe(key);
+    }
+}

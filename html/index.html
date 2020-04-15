@@ -53,10 +53,7 @@ client.connect({onSuccess:onConnect});
 function onConnect() {
   // Once a connection has been made, make a subscription and send a message.
   console.log("onConnect");
-  client.subscribe("Temperature");
-  client.subscribe("Humidity");
-  client.subscribe("Illuminance");
-  client.subscribe("Voltage");
+  subscribeTopics(client);
   message = new Paho.MQTT.Message("Connect from " + clientId);
   message.destinationName = "Log";
   client.send(message);

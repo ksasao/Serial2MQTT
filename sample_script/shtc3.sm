@@ -19,13 +19,8 @@ void OnSerialReceived(string data)
             float temperature = Convert.ToSingle(c[0]);
             float humidity = Convert.ToSingle(c[1]);
             string id = c[2];
-            var json = new
-            {
-                Id = id,
-                Temperature = temperature,
-                Humidity = humidity
-            };
-            Publish("Brownie", json);
+            Publish("Temperature", new { Id = id, Value = temperature} );
+            Publish("Humidity", new {Id = id, Value = humidity} );
         }
     }
     catch (FormatException)

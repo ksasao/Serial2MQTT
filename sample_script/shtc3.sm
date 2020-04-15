@@ -1,0 +1,35 @@
+﻿void Setup(SerialPort serial)
+{
+    serial.BaudRate = 9600;
+    serial.StopBits = StopBits.One;
+    serial.NewLine = "\n";
+    serial.DtrEnable = true;
+    serial.Parity = Parity.None;
+}
+
+void OnSerialReceived(string data)
+{
+    Console.WriteLine($"{PortName} => {data}");
+    string[] s = data.Split(' ');
+    string[] c = data.Split(',');
+    try
+    {
+        if (c.Length >= 2)
+        {
+            float temperature = Convert.ToSingle(c[0]);
+            float humidity = Convert.ToSingle(c[1]);
+            string id = c[2];
+            var json = new
+            {
+                Id = id,
+                Temperature = temperature,
+                Humidity = humidity
+            };
+            Publish("Brownie", json);
+        }
+    }
+    catch (FormatException)
+    {
+        // nothing to do
+    }
+}

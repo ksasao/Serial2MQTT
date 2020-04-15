@@ -3,10 +3,13 @@ Serial Port to MQTT converter written in .NET Core 3. Easy to customize by C#-li
 
 ## Usage
 ```
-Serial2MQTT [COM_PORT_NAME] [MQTT_SERVER_ADDRESS] [SCRIPT(*.sm)]
+Serial2MQTT [COM_PORT_NAME] [MQTT_BROKER_ADDRESS] [SCRIPT(*.sm)]
 ```
 
 ## Get started
+0. Setup MQTT Broker
+[Eclipse Mosquitto](https://mosquitto.org/) is recommended.
+
 1. Write ```sample.sm``` script.
 ```
 void Setup(SerialPort serial)

@@ -13,11 +13,12 @@ namespace Serial2MQTT
 {
     public class ScriptLoader
     {
+        public string TemplateFile { get; } = "Template.cs";
         public void RunScript(string comPort, string host, string path)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-            string[] template = File.ReadAllLines("Monitor.cs");
+            string[] template = File.ReadAllLines(TemplateFile);
             string[] script = File.ReadAllLines(path);
             List<string> builder = new List<string>();
             bool skip = false;
@@ -72,6 +73,7 @@ namespace Serial2MQTT
                     message = $"{path} ({line-offset},{col}){body}\r\n{builder[line-1]}\r\n{cursor}";
                 }
                 Console.WriteLine(message);
+                Environment.Exit(-1);
             }
         }
 

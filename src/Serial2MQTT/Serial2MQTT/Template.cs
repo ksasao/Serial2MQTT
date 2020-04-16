@@ -12,7 +12,7 @@ using System.Net;
 namespace Serial2MQTT
 {
 //*]
-    public class Monitor
+    public class Template
     {
         SerialPort serialPort;
         public string PortName { get; private set; }
@@ -23,7 +23,7 @@ namespace Serial2MQTT
 
         string clientId = "";
 
-        public Monitor(string portName, string host)
+        public Template(string portName, string host)
         {
             PortName = portName;
             int pos = host.LastIndexOf(":");

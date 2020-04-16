@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "Serial2MQTT": {
+      "commandName": "Project"
+    }
+  }
+}

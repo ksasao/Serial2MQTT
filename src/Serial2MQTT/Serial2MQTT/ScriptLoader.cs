@@ -13,7 +13,8 @@ namespace Serial2MQTT
 {
     public class ScriptLoader
     {
-        public string TemplateFile { get; } = "Template.cs";
+        const string Template = "Template";
+        public string TemplateFile { get; } = Template + ".cs";
         public void RunScript(string comPort, string host, string path)
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
@@ -47,7 +48,7 @@ namespace Serial2MQTT
                     }
                 }
             }
-            string text = string.Join("\r\n",builder) + $"\r\nnew Monitor(\"{comPort}\",\"{host}\")";
+            string text = string.Join("\r\n",builder) + $"\r\nnew {Template}(\"{comPort}\",\"{host}\")";
             try
             {
                 ScriptOptions options = ScriptOptions.Default

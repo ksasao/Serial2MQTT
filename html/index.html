@@ -9,7 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <script src="mqttchart.js"></script>
     <link rel="stylesheet" href="style.css">
-     <title>Chart.js - Time series line chart</title>
+     <title>MQTT Chart</title>
 </head>
 <body>
     <div id="container">
@@ -17,66 +17,20 @@
         <div><canvas id="chart2"></canvas></div>
         <div><canvas id="chart3"></canvas></div>
         <div><canvas id="chart4"></canvas></div>
+        <div><canvas id="chart5"></canvas></div>
     </div>
 </body>
 <script>
+
 // id, MQTT topic, label (Y-axis), min, max
 setChart('chart1','Temperature','Temperature (℃)', undefined, undefined); // 'undefined' means auto
 setChart('chart2','Humidity','Humidity (%RH)', undefined, undefined);
 setChart('chart3','Illuminance','Illuminance (lux)', 0, undefined);
-setChart('chart4','Voltage','Voltage (V)', 0,5);
+setChart('chart4','Voltage','Voltage (V)', 0,3.5);
+setChart('chart5','Lqi','LQI (dBm)', -100,0);
 
-// Update chart data
-setInterval(function(){
-    const now = Date.now();
-    const old = new Date(now - (1000 * 60 * 30));
-    for (var key in topics) {
-        updateAxes(charts[key], axisNames[key], old, now, yMins[key],yMaxs[key]);
-    }
-},3000);
-
-// MQTT Broker
-serverAddress = "192.168.3.40";
-serverPort = 8001; // MQTT over WebSocket port
-
-var clientId = "JavaScriptClient-"+(Math.floor(Math.random() * 100000));
-client = new Paho.MQTT.Client(serverAddress, Number(serverPort),clientId);
-
-// set callback handlers
-client.onConnectionLost = onConnectionLost;
-client.onMessageArrived = onMessageArrived;
-
-// connect the client
-client.connect({onSuccess:onConnect});
-
-// called when the client connects
-function onConnect() {
-  // Once a connection has been made, make a subscription and send a message.
-  console.log("onConnect");
-  subscribeTopics(client);
-  message = new Paho.MQTT.Message("Connect from " + clientId);
-  message.destinationName = "Log";
-  client.send(message);
-}
-
-// called when the client loses its connection
-function onConnectionLost(responseObject) {
-  if (responseObject.errorCode !== 0) {
-    console.log("onConnectionLost:"+responseObject.errorMessage);
-  }
-}
-
-// called when a message arrives
-function onMessageArrived(message) {
-    try{
-        let topic = message.destinationName;
-        const data = JSON.parse(message.payloadString);
-        addData(charts[topic], lists[topic], data.Id, { x: Date.now(), y: data.Value });
-    }catch(e){
-        // nothing
-    }
-  console.log("onMessageArrived:"+message.payloadString);
-}
+//  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
+startChart("192.168.3.40", 8001, 1000 * 60 * 30, 10 * 1000);
 
 </script>
 </html>

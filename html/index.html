@@ -18,6 +18,7 @@
         <div><canvas id="chart3"></canvas></div>
         <div><canvas id="chart4"></canvas></div>
         <div><canvas id="chart5"></canvas></div>
+        <div><canvas id="chart6"></canvas></div>
     </div>
 </body>
 <script>
@@ -28,6 +29,7 @@ setChart('chart2','Humidity','Humidity (%RH)', undefined, undefined);
 setChart('chart3','Illuminance','Illuminance (lux)', 0, undefined);
 setChart('chart4','Voltage','Voltage (V)', 0,3.5);
 setChart('chart5','Lqi','LQI (dBm)', -100,0);
+setChart('chart6','Watt','Power Consumption (W)', 0, undefined);
 
 //  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
 startChart("192.168.3.40", 8001, 1000 * 60 * 30, 10 * 1000);

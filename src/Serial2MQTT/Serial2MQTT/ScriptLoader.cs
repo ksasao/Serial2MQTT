@@ -52,7 +52,7 @@ namespace Serial2MQTT
             try
             {
                 ScriptOptions options = ScriptOptions.Default
-                    .WithImports("System", "System.Text", "System.Net.Http", "uPLibrary.Networking.M2Mqtt", "Codeplex.Data", "System.IO.Ports")
+                    .WithImports("System", "System.Text", "System.Net.Http", "uPLibrary.Networking.M2Mqtt", "Codeplex.Data", "System.IO.Ports","System.Timers","System.Threading")
                     .WithReferences(
                         "System.IO.Ports.dll",
                         Path.GetFullPath(@"Serial2MQTT.dll"),

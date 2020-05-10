@@ -75,6 +75,7 @@ namespace Serial2MQTT
                     {
                         client.Disconnect();
                     }
+                    client = null;
                     client = new MqttClient(Host, Port, false, null, null, MqttSslProtocols.None);
                     client.MqttMsgPublishReceived += (sender, e) =>
                     {
@@ -82,7 +83,7 @@ namespace Serial2MQTT
                     };
                     client.ConnectionClosed += (sender, e) =>
                     {
-                        Console.WriteLine("Connection Closed.");
+                        Console.WriteLine("MQTT Connection Closed.");
                         Reset();
                     };
                     clientId = Guid.NewGuid().ToString();
@@ -92,7 +93,7 @@ namespace Serial2MQTT
                 catch (Exception ex)
                 {
                     Console.WriteLine($"MQTT Connection failed. : {ex.Message}");
-                    Retry();
+                    Reset();
                 }
 
                 // Serial port reset
@@ -102,6 +103,7 @@ namespace Serial2MQTT
                     {
                         serialPort.Close();
                         serialPort.Dispose();
+                        serialPort = null;
                     }
                     serialPort = new SerialPort();
                     serialPort.PortName = PortName;

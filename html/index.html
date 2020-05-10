@@ -12,6 +12,14 @@
      <title>MQTT Chart</title>
 </head>
 <body>
+    <div>
+        <select name="duration" id="select-1">
+            <option value="60">1 min.</option>
+            <option value="300">5 min.</option>
+            <option value="1200" selected>20 min.</option>
+            <option value="3600">1 hour</option>
+        </select>
+    </div>
     <div id="container">
         <div><canvas id="chart1"></canvas></div>
         <div><canvas id="chart2"></canvas></div>
@@ -19,20 +27,39 @@
         <div><canvas id="chart4"></canvas></div>
         <div><canvas id="chart5"></canvas></div>
         <div><canvas id="chart6"></canvas></div>
+        <div><canvas id="chart7"></canvas></div>
+        <div><canvas id="chart8"></canvas></div>
+        <div><canvas id="chart9"></canvas></div>
     </div>
 </body>
 <script>
 
-// id, MQTT topic, label (Y-axis), min, max
-setChart('chart1','Temperature','Temperature (℃)', undefined, undefined); // 'undefined' means auto
-setChart('chart2','Humidity','Humidity (%RH)', undefined, undefined);
-setChart('chart3','Illuminance','Illuminance (lux)', 0, undefined);
-setChart('chart4','Voltage','Voltage (V)', 0,3.5);
-setChart('chart5','Lqi','LQI (dBm)', -100,0);
-setChart('chart6','Watt','Power Consumption (W)', 0, undefined);
+$(window).on('load', function() {
+    // id, MQTT topic, label (Y-axis), min, max
+    setChart('chart1','Temperature','Temperature (℃)', undefined, undefined); // 'undefined' means auto
+    setChart('chart2','Humidity','Humidity (%RH)', undefined, undefined);
+    setChart('chart3','Illuminance','Illuminance (lux)', 0, undefined);
+    setChart('chart4','Voltage','Voltage (V)', 0,3.5);
+    setChart('chart5','Lqi','LQI (dBm)', -100,0);
+    setChart('chart6','Watt','Power Consumption (W)', 0, undefined);
+    setChart('chart7','CO2','CO2e (ppm)', 400, undefined);
+    setChart('chart8','Pressure','Pressure (Pa)', undefined, undefined);
+    setChart('chart9','Weight','Weight (kg)', undefined, undefined);
 
-//  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
-startChart("192.168.3.40", 8001, 1000 * 60 * 30, 10 * 1000);
+    //  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
+    var duration = $('#select-1 option:selected').val() * 1000;
+    startChart("192.168.3.40", 8001, duration, 10 * 1000);
+
+    // Update duration
+    $(function(){
+        $('select').change(function(){
+            let val = $(this).val();
+            console.log("Duration changed: " + val);
+            setDuration(val);
+        });
+    });
+});
+
 
 </script>
 </html>

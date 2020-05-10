@@ -7,6 +7,7 @@ let axisNames = {};
 let yMins ={};
 let yMaxs = {};
 let clientId;
+let chart_duration;
 
 function setChart(id, topic, axisName, yMin, yMax) {
     let ctx = document.getElementById(id).getContext('2d');
@@ -29,6 +30,9 @@ function setChart(id, topic, axisName, yMin, yMax) {
     axisNames[topic] = axisName;
     yMins[topic] = yMin;
     yMaxs[topic] = yMax;
+    const now = Date.now();
+    const old = new Date(now - 3600);
+    updateAxes(chart, axisName, old, now, yMin,yMax);
 }
 
 //  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
@@ -42,18 +46,32 @@ function startChart(serverAddress, serverPort, duration, repeat){
     client.onMessageArrived = onMessageArrived;
 
     // connect the client
-    client.connect({onSuccess:onConnect});
+    var options = {
+        onSuccess: onConnect,
+        onFailure: onFailure
+    };
+    client.connect(options);
 
     // Update chart data
+    chart_duration = duration;
     setInterval(function(){
+        updateChart();
+    }, repeat);
+}
+function updateChart(){
         const now = Date.now();
-        const old = new Date(now - duration);
+        const old = new Date(now - chart_duration);
         for (let key in topics) {
             updateAxes(charts[key], axisNames[key], old, now, yMins[key],yMaxs[key]);
         }
-    }, repeat);
 }
-
+function onFailure(message){
+    setTimeout(startChart, 10 * 1000);
+}
+function setDuration(duration_sec){
+    chart_duration = duration_sec * 1000;
+    updateChart();
+}
 function updateAxes(chart, label, t_min,t_max, y_min,y_max) {
     chart.options = {
         scales: {
@@ -115,7 +133,8 @@ function addData(chart, list, data, item) {
         if(d.label == data){
             d.data.push(item);
             // Remove old data
-            if(d.data[0].x < chart.options.scales.xAxes[0].time.min){
+            //if(d.data[0].x < chart.options.scales.xAxes[0].time.min){
+            if(d.data[0].x < Date.now() - 3600 * 1000){
                 d.data.shift();
             }
         }
@@ -143,7 +162,8 @@ function onConnect() {
 // called when the client loses its connection
 function onConnectionLost(responseObject) {
     if (responseObject.errorCode !== 0) {
-    console.log("onConnectionLost:"+responseObject.errorMessage);
+        console.log("onConnectionLost:"+responseObject.errorMessage);
+        setTimeout(startChart, 10 * 1000);
     }
 }
 

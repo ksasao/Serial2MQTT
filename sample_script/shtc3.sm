@@ -28,3 +28,7 @@ void OnSerialReceived(string data)
         // nothing to do
     }
 }
+
+void OnTopicReceived(string topic, string data){
+    
+}

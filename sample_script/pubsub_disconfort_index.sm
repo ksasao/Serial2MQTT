@@ -1,0 +1,53 @@
+﻿void Setup(SerialPort serial)
+{
+    // Subscribe Topics
+    string[] topics = new string[]{ "Temperature", "Humidity" };
+    Subscribe(topics);
+}
+void OnSerialReceived(string data)
+{
+}
+
+Dictionary<string,(float value,DateTime date)> lastTemperatures
+    = new Dictionary<string,(float value,DateTime date)>();
+Dictionary<string,(float value,DateTime date)> lastHumidities
+    = new Dictionary<string,(float value,DateTime date)>();
+
+void PublishDiscomfortIndex(string id){
+    float td = lastTemperatures[id].value;
+    float h = lastHumidities[id].value;
+    double di = 0.81 * td + 0.01 * h * (0.99 * td - 14.3) + 46.3;
+    di = Math.Truncate(di * 100.0) / 100.0;
+    var json = new
+    {
+        Id = id,
+        Value = di
+    };
+    Publish("DiscomfortIndex",json);
+}
+
+void OnTopicReceived(string topic, string data)
+{
+    try{
+        var json = DynamicJson.Parse(data);
+        string id = Convert.ToString(json.Id);
+        float val = Convert.ToSingle(json.Value);
+        DateTime now = DateTime.Now;
+
+        if(topic == "Temperature"){
+            lastTemperatures[id] = (val,now);
+            if(lastHumidities.ContainsKey(id)
+                && now - lastHumidities[id].date < new TimeSpan(0,0,5)){
+                PublishDiscomfortIndex(id);
+            }
+        }else if(topic == "Humidity"){
+            lastHumidities[id] = (val,now);
+            if(lastTemperatures.ContainsKey(id)
+                && now - lastTemperatures[id].date < new TimeSpan(0,0,5)){
+                PublishDiscomfortIndex(id);
+            }
+        }
+    }catch{
+        Console.WriteLine($"Parse Error.: {topic}/{data}");
+    }
+}

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
-using uPLibrary.Networking.M2Mqtt;
+using System.Net;
 
 namespace Serial2MQTT
 {
@@ -52,11 +52,15 @@ namespace Serial2MQTT
             try
             {
                 ScriptOptions options = ScriptOptions.Default
-                    .WithImports("System", "System.Text", "System.Net.Http", "uPLibrary.Networking.M2Mqtt", "Codeplex.Data", "System.IO.Ports","System.Timers","System.Threading")
+                    .WithImports("System", "System.Text", "System.Math", "System.Collections.Generic", 
+                        "System.Net", "Codeplex.Data", "System.IO.Ports","System.Timers","System.Threading", "System.Threading.Tasks",
+                        "MQTTnet","MQTTnet.Client","MQTTnet.Client.Options"
+                    )
                     .WithReferences(
                         "System.IO.Ports.dll",
-                        Path.GetFullPath(@"Serial2MQTT.dll"),
-                        Path.GetFullPath(@"M2Mqtt.dll"));
+                        Path.GetFullPath(@"MQTTnet.dll"),
+                        Path.GetFullPath(@"Serial2MQTT.dll")
+                    );
                 var task = CSharpScript.RunAsync(text, options);
                 task.Wait();
             }catch(Exception ex)

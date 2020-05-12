@@ -41,3 +41,9 @@ Connected.
 COM10 => device_id 80DCDD98
 192.168.3.40/Hello <= {"Data":"World"}
 ```
+
+## Usage
+If you don't want to use serial port (use MQTT pub/sub only), set [COM_PORT_NAME] as "".
+```
+Serial2MQTT "" 192.168.3.40 pubsub_disconfort_index.sm
+```

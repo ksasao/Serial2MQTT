@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO.Ports;
 using System.Threading.Tasks;
-using System.Net.Http;
-using uPLibrary.Networking.M2Mqtt;
 using Codeplex.Data;
-using System.Net;
 using System.Timers;
 using System.Threading;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Client.Options;
 
 namespace Serial2MQTT
 {
@@ -25,8 +25,13 @@ namespace Serial2MQTT
         /// Auto restart duration (sec)
         /// </summary>
         public int NoSignalRestart { get; set; } = 3 * 60;
+
+        public bool SerialPortEnabled { get; private set; } = false;
+        public string[] Topics { get; private set; }
         
-        MqttClient client = null;
+
+        MqttFactory factory = new MqttFactory();
+        IMqttClient client;
 
         // for freeze check
         System.Timers.Timer watchDogTimer = new System.Timers.Timer(500);
@@ -38,6 +43,9 @@ namespace Serial2MQTT
         public Template(string portName, string host)
         {
             PortName = portName;
+            SerialPortEnabled = (portName.Trim() != "");
+
+
             int pos = host.LastIndexOf(":");
             if (pos > 0)
             {
@@ -49,8 +57,8 @@ namespace Serial2MQTT
                 Host = host;
             }
             Console.WriteLine($"Connecting to {Host}:{Port}");
-
             Initialize();
+
         }
 
         private void Initialize()
@@ -68,61 +76,95 @@ namespace Serial2MQTT
             {
                 lastUpdate = DateTime.Now;
 
-                // MQTT Server reconnect
+
+                // Serial port reset
+                if (SerialPortEnabled)
+                {
+                    try
+                    {
+                        if (serialPort != null && serialPort.IsOpen)
+                        {
+                            serialPort.Close();
+                            serialPort.Dispose();
+                            serialPort = null;
+                        }
+                        serialPort = new SerialPort();
+                        serialPort.PortName = PortName;
+                        serialPort.DataReceived += SerialPort_DataReceived;
+
+                        Setup(serialPort);
+
+                        serialPort.Open();
+                        serialPort.ReadExisting();
+                        Console.WriteLine($"{serialPort.PortName} Connected.");
+                        hasError = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"{serialPort.PortName} Connection failed. : {ex.Message}");
+                        Retry();
+                    }
+                }
+                else
+                {
+                    Setup(new SerialPort()); // dummy
+                    hasError = false;
+                }
+
+                // MQTT client setup
                 try
                 {
-                    if (client != null && client.IsConnected)
+                    if (client != null)
                     {
-                        client.Disconnect();
+                        client.Dispose();
                     }
                     client = null;
-                    client = new MqttClient(Host, Port, false, null, null, MqttSslProtocols.None);
-                    client.MqttMsgPublishReceived += (sender, e) =>
+                    client = factory.CreateMqttClient();
+
+                    var options = new MqttClientOptionsBuilder()
+                        .WithTcpServer(Host, Port)
+                        .Build();
+
+                    // Set topic filters
+                    client.UseConnectedHandler(async e =>
                     {
-                        Console.WriteLine(Encoding.UTF8.GetString(e.Message));
-                    };
-                    client.ConnectionClosed += (sender, e) =>
+                        if (Topics != null && Topics.Length > 0)
+                        {
+                            var filters = new TopicFilter[Topics.Length];
+                            for(int i=0; i<filters.Length; i++)
+                            {
+                                filters[i] = new TopicFilterBuilder().WithTopic(Topics[i]).Build();
+                            }
+                            await client.SubscribeAsync(filters);
+                        }
+                    });
+                    // Message receive event
+                    client.UseApplicationMessageReceivedHandler(e => {
+                        string topic = e.ApplicationMessage.Topic;
+                        string data = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                        OnTopicReceived(topic, data);
+                    });
+                    // Disconnect Event
+                    client.UseDisconnectedHandler(async e =>
                     {
                         Console.WriteLine("MQTT Connection Closed.");
+                        await Task.Delay(TimeSpan.FromSeconds(5));
                         Reset();
-                    };
+                    });
                     clientId = Guid.NewGuid().ToString();
-                    client.Connect(clientId);
-                    Console.WriteLine("MQTT Connected.");
+                    Task.Run(async () => {
+                        await client.ConnectAsync(options);
+                        Console.WriteLine("MQTT Connected.");
+                    });
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"MQTT Connection failed. : {ex.Message}");
                     Reset();
                 }
-
-                // Serial port reset
-                try
-                {
-                    if (serialPort != null && serialPort.IsOpen)
-                    {
-                        serialPort.Close();
-                        serialPort.Dispose();
-                        serialPort = null;
-                    }
-                    serialPort = new SerialPort();
-                    serialPort.PortName = PortName;
-                    serialPort.DataReceived += SerialPort_DataReceived;
-
-                    Setup(serialPort);
-
-                    serialPort.Open();
-                    serialPort.ReadExisting();
-                    Console.WriteLine($"{serialPort.PortName} Connected.");
-                    hasError = false;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"{serialPort.PortName} Connection failed. : {ex.Message}");
-                    Retry();
-                }
             }
         }
+
         private void Retry()
         {
             Console.WriteLine("Waiting 60 seconds.");
@@ -131,23 +173,39 @@ namespace Serial2MQTT
 
         private void WatchDogTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            DateTime now = DateTime.Now;
-            if((now-lastUpdate).TotalSeconds > NoSignalRestart)
+            if (SerialPortEnabled)
             {
-                lastUpdate = now;
-                Console.WriteLine("Restarting...");
-                Reset();
+                DateTime now = DateTime.Now;
+                if ((now - lastUpdate).TotalSeconds > NoSignalRestart)
+                {
+                    lastUpdate = now;
+                    Console.WriteLine("No signal from serial port ({NoSignalRestart} sec.). Restarting...");
+                    Reset();
+                }
             }
         }
+        void Subscribe(string[] topics)
+        {
+            Topics = topics;
+        }
 
-
-        void Publish(string path, object json)
+        void Publish(string topic, object json)
         {
             var jsonString = DynamicJson.Serialize(json);
-            Console.WriteLine($"{Host}/{path} <= {jsonString}");
+            Console.WriteLine($"{Host}/{topic} <= {jsonString}");
             try
             {
-                client.Publish(path, Encoding.UTF8.GetBytes(jsonString));
+                var message = new MqttApplicationMessageBuilder()
+                    .WithTopic(topic)
+                    .WithPayload(Encoding.UTF8.GetBytes(jsonString))
+                    .WithRetainFlag()
+                    .Build();
+
+                Task.Run(async () =>
+                {
+                    await client.PublishAsync(message, CancellationToken.None);
+                });
+
             }
             catch(Exception ex)
             {
@@ -172,6 +230,10 @@ namespace Serial2MQTT
             serial.NewLine = "\n";
             serial.DtrEnable = true;
             serial.Parity = Parity.None;
+
+            // Subscribe Topics
+            string[] topics = new string[]{ "#" };
+            Subscribe(topics);
         }
         void OnSerialReceived(string data)
         {
@@ -182,6 +244,10 @@ namespace Serial2MQTT
                 Data = "World"
             };
             Publish("Hello", json);
+        }
+        void OnTopicReceived(string topic, string data)
+        {
+            Console.WriteLine($"{topic}: {data}");
         }
 //*]
     }

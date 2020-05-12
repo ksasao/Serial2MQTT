@@ -6,6 +6,10 @@
     serial.NewLine = "\n";
     serial.DtrEnable = true;
     serial.Parity = Parity.None;
+
+    // Subscribe Topics
+    string[] topics = new string[]{ "#" };
+    Subscribe(topics);
 }
 void OnSerialReceived(string data)
 {
@@ -16,4 +20,8 @@ void OnSerialReceived(string data)
         Data = "World"
     };
     Publish("Hello", json);
+}
+void OnTopicReceived(string topic, string data)
+{
+    Console.WriteLine($"{topic}: {data}");
 }

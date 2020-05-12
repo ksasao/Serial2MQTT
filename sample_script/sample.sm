@@ -17,3 +17,7 @@ void OnSerialReceived(string data)
     };
     Publish("Hello", json);
 }
+
+void OnTopicReceived(string topic, string data){
+    
+}

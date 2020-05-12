@@ -21,6 +21,7 @@
         </select>
     </div>
     <div id="container">
+        <div><canvas id="chart0"></canvas></div>
         <div><canvas id="chart1"></canvas></div>
         <div><canvas id="chart2"></canvas></div>
         <div><canvas id="chart3"></canvas></div>
@@ -36,6 +37,7 @@
 
 $(window).on('load', function() {
     // id, MQTT topic, label (Y-axis), min, max
+    setChart('chart0','DiscomfortIndex','不快指数 (快適：65～70)', undefined, undefined); // 'undefined' means auto
     setChart('chart1','Temperature','Temperature (℃)', undefined, undefined); // 'undefined' means auto
     setChart('chart2','Humidity','Humidity (%RH)', undefined, undefined);
     setChart('chart3','Illuminance','Illuminance (lux)', 0, undefined);

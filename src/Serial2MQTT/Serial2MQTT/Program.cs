@@ -15,6 +15,7 @@ namespace Serial2MQTT
             {
                 Console.WriteLine("usage: Serial2MQTT [COM_PORT_NAME] [MQTT_SERVER_ADDRESS] [SCRIPT(*.sm)]");
             }
+            Console.ReadKey();
         }
     }
 }

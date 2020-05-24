@@ -1,5 +1,6 @@
 // Setup chart
 Chart.defaults.global.defaultFontSize = 12;
+Chart.defaults.global.animation.duration = 0;
 let charts = {};
 let topics = {};
 let lists = {};
@@ -8,21 +9,22 @@ let yMins ={};
 let yMaxs = {};
 let clientId;
 let chart_duration;
+let chart_ready = false;
 
 function setChart(id, topic, axisName, yMin, yMax) {
     let ctx = document.getElementById(id).getContext('2d');
     let list = [];
     const chart = new Chart(ctx, {
-    type: 'line',
-    data: { datasets: list },
-    options: {
-        legend: {
+        type: 'line',
+        data: { datasets: list },
+        options: {
+            legend: {
                 display: true,
                 labels: {
                     fontColor: 'rgb(64, 64, 64)'
                 }
-            },
-    }
+            }
+        }
     });
     topics[topic] = topic;
     charts[topic] = chart;
@@ -56,14 +58,15 @@ function startChart(serverAddress, serverPort, duration, repeat){
     chart_duration = duration;
     setInterval(function(){
         updateChart();
+	chart_ready = true;
     }, repeat);
 }
 function updateChart(){
         const now = Date.now();
-        const old = new Date(now - chart_duration);
-        for (let key in topics) {
-            updateAxes(charts[key], axisNames[key], old, now, yMins[key],yMaxs[key]);
-        }
+       	const old = new Date(now - chart_duration);
+    	for (let key in topics) {
+       	    updateAxes(charts[key], axisNames[key], old, now, yMins[key],yMaxs[key]);
+       	}
 }
 function onFailure(message){
     setTimeout(startChart, 10 * 1000);
@@ -139,7 +142,7 @@ function addData(chart, list, data, item) {
             }
         }
     });
-    chart.update();
+    //chart.update();
 }
 
 function subscribeTopics(client){
@@ -169,6 +172,8 @@ function onConnectionLost(responseObject) {
 
 // called when a message arrives
 function onMessageArrived(message) {
+    if(chart_ready){
+
     try{
         let topic = message.destinationName;
         const data = JSON.parse(message.payloadString);
@@ -177,4 +182,5 @@ function onMessageArrived(message) {
         // nothing
     }
     console.log("onMessageArrived:"+message.payloadString);
+}
 }

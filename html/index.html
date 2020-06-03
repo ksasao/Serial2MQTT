@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.ui/1.12.1/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"></script>
     <script src="https://unpkg.com/chartjs-plugin-colorschemes"></script>
@@ -31,6 +32,9 @@
         <div><canvas id="chart7"></canvas></div>
         <div><canvas id="chart8"></canvas></div>
         <div><canvas id="chart9"></canvas></div>
+        <div><canvas id="chart10"></canvas></div>
+        <div><canvas id="chart11"></canvas></div>
+        <div><canvas id="chart12"></canvas></div>
     </div>
 </body>
 <script>
@@ -47,11 +51,18 @@ $(window).on('load', function() {
     setChart('chart7','CO2','CO2e (ppm)', 400, undefined);
     setChart('chart8','Pressure','Pressure (Pa)', undefined, undefined);
     setChart('chart9','Weight','Weight (kg)', undefined, undefined);
+    setChart('chart10','Direction','方位', 0, 7); // 'undefined' means auto
+    setChart('chart11','WindSpeed','Wind Speed (m/s)', 0, undefined); // 'undefined' means auto
+    setChart('chart12','AccumulatedRainfall','積算雨量 (mm)', 0, undefined); // 'undefined' means auto
 
     //  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
     var duration = $('#select-1 option:selected').val() * 1000;
     startChart("192.168.3.40", 8001, duration, 10 * 1000);
 
+    $(function() {
+        $('#container').sortable();
+        $('#container').disableSelection();
+    } );
     // Update duration
     $(function(){
         $('select').change(function(){

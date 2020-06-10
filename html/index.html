@@ -35,6 +35,7 @@
         <div><canvas id="chart10"></canvas></div>
         <div><canvas id="chart11"></canvas></div>
         <div><canvas id="chart12"></canvas></div>
+        <div><canvas id="chart13"></canvas></div>
     </div>
 </body>
 <script>
@@ -54,6 +55,7 @@ $(window).on('load', function() {
     setChart('chart10','Direction','方位', 0, 7); // 'undefined' means auto
     setChart('chart11','WindSpeed','Wind Speed (m/s)', 0, undefined); // 'undefined' means auto
     setChart('chart12','AccumulatedRainfall','積算雨量 (mm)', 0, undefined); // 'undefined' means auto
+    setChart('chart13','Brownie','Brownie', 0, 1); // 'undefined' means auto
 
     //  MQTT Broker IP Address, MQTT over Websocket Port, duration (ms), repeat timer (ms) 
     var duration = $('#select-1 option:selected').val() * 1000;

@@ -173,14 +173,15 @@ function onConnectionLost(responseObject) {
 // called when a message arrives
 function onMessageArrived(message) {
     if(chart_ready){
-
-    try{
-        let topic = message.destinationName;
-        const data = JSON.parse(message.payloadString);
-        addData(charts[topic], lists[topic], data.Id, { x: Date.now(), y: data.Value });
-    }catch(e){
-        // nothing
+        try{
+            let topic = message.destinationName;
+            const data = JSON.parse(message.payloadString);
+            addData(charts[topic], lists[topic], data.Id, { x: Date.now(), y: data.Value });
+        }catch(e){
+            console.log(e);
+        }
+        console.log("onMessageArrived:"+message.payloadString);
+    }else{
+        console.log("initializing.... ignored:"+message.payloadString);
     }
-    console.log("onMessageArrived:"+message.payloadString);
-}
 }
